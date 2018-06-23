@@ -2,9 +2,10 @@ import os
 import numpy as np
 import sys
 import cv2
+import logging
 
 # Make sure that caffe is on the python path:
-CAFFE_ROOT = '/home/caffe/caffe/' # CHANGE THIS LINE TO YOUR Caffe PATH
+CAFFE_ROOT = '/home/jarg/CaffeToFPGA/' # CHANGE THIS LINE TO YOUR Caffe PATH
 sys.path.insert(0, CAFFE_ROOT + 'python')
 
 import caffe
@@ -29,13 +30,17 @@ image = cv2.imread(IMAGE_FILE4)
 image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 #image = 255 - image
 image.resize((28, 28, 1))
-cv2.imshow('image', image)
+#cv2.imshow('image', image)
 
 net.blobs['data'].reshape(1, 1, 28, 28)
 net.blobs['data'].data[...] = transformer.preprocess('data', image)    
 
 net.forward()
 scores = net.blobs['ip2'].data
+
+#logging.warning(scores)
+#logging.warning(scores.argmax())
+
 print scores
 print scores.argmax()
 

@@ -13,3 +13,5 @@ do
         gunzip ${fname}.gz
     fi
 done
+
+echo "Done!"
