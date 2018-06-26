@@ -3,6 +3,9 @@ import numpy as np
 import sys
 import cv2
 import logging
+from datetime import datetime
+
+startTime = datetime.now()
 
 # Make sure that caffe is on the python path:
 CAFFE_ROOT = '/home/jarg/CaffeToFPGA/' # CHANGE THIS LINE TO YOUR Caffe PATH
@@ -43,6 +46,7 @@ scores = net.blobs['ip2'].data
 
 print scores
 print scores.argmax()
+print 'Script took', datetime.now()-startTime, 'seconds.'
 
 #net = caffe.Net(MODEL_FILE, PRETRAINED, caffe.TEST)
 #caffe.set_mode_cpu()

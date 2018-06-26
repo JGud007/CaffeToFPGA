@@ -308,7 +308,7 @@ endif
 ifneq (,$(findstring clang++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,-force_load $(STATIC_NAME)
 else ifneq (,$(findstring g++,$(CXX)))
-	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
+	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive,-pg
 else
   # The following line must not be indented with a tab, since we are not inside a target
   $(error Cannot static link with the $(CXX) compiler)
@@ -316,7 +316,7 @@ endif
 
 # Debugging
 ifeq ($(DEBUG), 1)
-	COMMON_FLAGS += -DDEBUG -g -O0
+	COMMON_FLAGS += -DDEBUG -pg -O0
 	NVCCFLAGS += -G
 else
 	COMMON_FLAGS += -DNDEBUG -O2
@@ -356,6 +356,7 @@ ifeq ($(CPU_ONLY), 1)
 	ALL_WARNS := $(ALL_CXX_WARNS)
 	TEST_FILTER := --gtest_filter="-*GPU*"
 	COMMON_FLAGS += -DCPU_ONLY
+	COMMON_FLAGS += -pg
 endif
 
 # Python layer support
@@ -415,7 +416,7 @@ CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
-LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
+LINKFLAGS += -pthread -pg -fPIC $(COMMON_FLAGS) $(WARNINGS)
 
 USE_PKG_CONFIG ?= 0
 ifeq ($(USE_PKG_CONFIG), 1)
