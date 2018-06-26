@@ -3,6 +3,7 @@ import numpy as np
 import sys
 import cv2
 import logging
+import cProfile, pstats, StringIO
 from datetime import datetime
 
 startTime = datetime.now()
@@ -23,6 +24,8 @@ IMAGE_FILE2 = CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/img_2_is0.jpg'
 IMAGE_FILE3 = CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/img_3_is9.jpg'
 IMAGE_FILE4 = CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/test_3.png'
 
+pr = cProfile.Profile()
+pr.enable()
 net = caffe.Net(MODEL_FILE, PRETRAINED, caffe.TEST)
 transformer = caffe.io.Transformer({'data': (1, 1, 28, 28)})
 transformer.set_transpose('data', (2, 0, 1))    
@@ -40,6 +43,13 @@ net.blobs['data'].data[...] = transformer.preprocess('data', image)
 
 net.forward()
 scores = net.blobs['ip2'].data
+
+pr.disable()
+s = StringIO.StringIO()
+sortby = 'cumulative'
+ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+ps.print_stats()
+print s.getvalue()
 
 #logging.warning(scores)
 #logging.warning(scores.argmax())
