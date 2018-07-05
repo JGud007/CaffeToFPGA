@@ -99,33 +99,9 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
 }
 
 template <typename Dtype>
-const Dtype* Blob<Dtype>::gpu_data() const {
-  CHECK(data_);
-  return (const Dtype*)data_->gpu_data();
-}
-
-template <typename Dtype>
-void Blob<Dtype>::set_gpu_data(Dtype* data) {
-  CHECK(data);
-  // Make sure CPU and GPU sizes remain equal
-  size_t size = count_ * sizeof(Dtype);
-  if (data_->size() != size) {
-    data_.reset(new SyncedMemory(size));
-    diff_.reset(new SyncedMemory(size));
-  }
-  data_->set_gpu_data(data);
-}
-
-template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
   return (const Dtype*)diff_->cpu_data();
-}
-
-template <typename Dtype>
-const Dtype* Blob<Dtype>::gpu_diff() const {
-  CHECK(diff_);
-  return (const Dtype*)diff_->gpu_data();
 }
 
 template <typename Dtype>
@@ -135,21 +111,9 @@ Dtype* Blob<Dtype>::mutable_cpu_data() {
 }
 
 template <typename Dtype>
-Dtype* Blob<Dtype>::mutable_gpu_data() {
-  CHECK(data_);
-  return static_cast<Dtype*>(data_->mutable_gpu_data());
-}
-
-template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_cpu_data());
-}
-
-template <typename Dtype>
-Dtype* Blob<Dtype>::mutable_gpu_diff() {
-  CHECK(diff_);
-  return static_cast<Dtype*>(diff_->mutable_gpu_data());
 }
 
 template <typename Dtype>
@@ -184,9 +148,6 @@ void Blob<Dtype>::Update() {
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
     // perform computation on GPU
-    caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
-        static_cast<const Dtype*>(diff_->gpu_data()),
-        static_cast<Dtype*>(data_->mutable_gpu_data()));
 #else
     NO_GPU;
 #endif
@@ -215,11 +176,7 @@ Dtype Blob<Dtype>::asum_data() const {
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-  {
-    Dtype asum;
-    caffe_gpu_asum(count_, gpu_data(), &asum);
-    return asum;
-  }
+  //GPU related code removed from here
 #else
     NO_GPU;
 #endif
@@ -289,8 +246,7 @@ Dtype Blob<Dtype>::sumsq_data() const {
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-    data = gpu_data();
-    caffe_gpu_dot(count_, data, data, &sumsq);
+  //GPU related code removed from here
 #else
     NO_GPU;
 #endif
@@ -326,8 +282,7 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-    diff = gpu_diff();
-    caffe_gpu_dot(count_, diff, diff, &sumsq);
+  //GPU related code removed from here
     break;
 #else
     NO_GPU;
@@ -360,9 +315,7 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-    data = mutable_gpu_data();
-    caffe_gpu_scal(count_, scale_factor, data);
-    return;
+  //GPU related code removed from here
 #else
     NO_GPU;
 #endif
@@ -393,9 +346,7 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-    diff = mutable_gpu_diff();
-    caffe_gpu_scal(count_, scale_factor, diff);
-    return;
+  //GPU related code removed from here
 #else
     NO_GPU;
 #endif
@@ -439,15 +390,6 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     }
   }
   switch (Caffe::mode()) {
-  case Caffe::GPU:
-    if (copy_diff) {
-      caffe_copy(count_, source.gpu_diff(),
-          static_cast<Dtype*>(diff_->mutable_gpu_data()));
-    } else {
-      caffe_copy(count_, source.gpu_data(),
-          static_cast<Dtype*>(data_->mutable_gpu_data()));
-    }
-    break;
   case Caffe::CPU:
     if (copy_diff) {
       caffe_copy(count_, source.cpu_diff(),
