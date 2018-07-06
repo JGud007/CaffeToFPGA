@@ -228,8 +228,6 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = Rand(input_height - crop_size + 1);
-      w_off = Rand(input_width - crop_size + 1);
     } else {
       h_off = (input_height - crop_size) / 2;
       w_off = (input_width - crop_size) / 2;
@@ -299,23 +297,6 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
-  if (datum.encoded()) {
-#ifdef USE_OPENCV
-    CHECK(!(param_.force_color() && param_.force_gray()))
-        << "cannot set both force_color and force_gray";
-    cv::Mat cv_img;
-    if (param_.force_color() || param_.force_gray()) {
-    // If force_color then decode in color otherwise decode in gray.
-      cv_img = DecodeDatumToCVMat(datum, param_.force_color());
-    } else {
-      cv_img = DecodeDatumToCVMatNative(datum);
-    }
-    // InferBlobShape using the cv::image.
-    return InferBlobShape(cv_img);
-#else
-    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
-#endif  // USE_OPENCV
-  }
   const int crop_size = param_.crop_size();
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
@@ -344,39 +325,6 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
   shape[0] = num;
   return shape;
 }
-
-#ifdef USE_OPENCV
-template<typename Dtype>
-vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
-  const int crop_size = param_.crop_size();
-  const int img_channels = cv_img.channels();
-  const int img_height = cv_img.rows;
-  const int img_width = cv_img.cols;
-  // Check dimensions.
-  CHECK_GT(img_channels, 0);
-  CHECK_GE(img_height, crop_size);
-  CHECK_GE(img_width, crop_size);
-  // Build BlobShape.
-  vector<int> shape(4);
-  shape[0] = 1;
-  shape[1] = img_channels;
-  shape[2] = (crop_size)? crop_size: img_height;
-  shape[3] = (crop_size)? crop_size: img_width;
-  return shape;
-}
-
-template<typename Dtype>
-vector<int> DataTransformer<Dtype>::InferBlobShape(
-    const vector<cv::Mat> & mat_vector) {
-  const int num = mat_vector.size();
-  CHECK_GT(num, 0) << "There is no cv_img to in the vector";
-  // Use first cv_img in the vector to InferBlobShape.
-  vector<int> shape = InferBlobShape(mat_vector[0]);
-  // Adjust num to the size of the vector.
-  shape[0] = num;
-  return shape;
-}
-#endif  // USE_OPENCV
 
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {

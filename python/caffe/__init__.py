@@ -1,4 +1,4 @@
-from .pycaffe import Net, NCCL, Timer
+from .pycaffe import Net
 from ._caffe import init_log, log, set_mode_cpu, set_mode_gpu, set_device, Layer, layer_type_list, set_random_seed, set_multiprocess, has_nccl
 from ._caffe import __version__
 from .proto.caffe_pb2 import TRAIN, TEST

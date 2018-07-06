@@ -10,7 +10,7 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import Net, NCCL, Timer
+from ._caffe import Net
 import caffe.io
 
 import six
