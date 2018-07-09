@@ -17,7 +17,6 @@
 #include "caffe/caffe.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
-//#include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -25,19 +24,6 @@
 #define NPY_ARRAY_C_CONTIGUOUS NPY_C_CONTIGUOUS
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
-
-/* Fix to avoid registration warnings in pycaffe (#3960) */
-#define BP_REGISTER_SHARED_PTR_TO_PYTHON(PTR) do { \
-  const boost::python::type_info info = \
-    boost::python::type_id<shared_ptr<PTR > >(); \
-  const boost::python::converter::registration* reg = \
-    boost::python::converter::registry::query(info); \
-  if (reg == NULL) { \
-    bp::register_ptr_to_python<shared_ptr<PTR > >(); \
-  } else if ((*reg).m_to_python == NULL) { \
-    bp::register_ptr_to_python<shared_ptr<PTR > >(); \
-  } \
-} while (0)
 
 namespace bp = boost::python;
 
@@ -196,12 +182,6 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
       PyArray_DIMS(data_arr)[0]);
 }
 
-Solver<Dtype>* GetSolverFromFile(const string& filename) {
-  SolverParameter param;
-  ReadSolverParamsFromTextFileOrDie(filename, &param);
-  return SolverRegistry<Dtype>::CreateSolver(param);
-}
-
 struct NdarrayConverterGenerator {
   template <typename T> struct apply;
 };
@@ -271,42 +251,6 @@ bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
 }
 
 template<typename Dtype>
-class SolverCallback: public Solver<Dtype>::Callback {
- protected:
-  bp::object on_start_, on_gradients_ready_;
-
- public:
-  SolverCallback(bp::object on_start, bp::object on_gradients_ready)
-    : on_start_(on_start), on_gradients_ready_(on_gradients_ready) { }
-  virtual void on_gradients_ready() {
-    on_gradients_ready_();
-  }
-  virtual void on_start() {
-    on_start_();
-  }
-};
-template<typename Dtype>
-void Solver_add_callback(Solver<Dtype> * solver, bp::object on_start,
-  bp::object on_gradients_ready) {
-  solver->add_callback(new SolverCallback<Dtype>(on_start, on_gradients_ready));
-}
-
-// Seems boost cannot call the base method directly
-void Solver_add_nccl(Solver<Dtype>* solver
-#ifdef USE_NCCL
-  , NCCL<Dtype>* nccl
-#endif
-) {
-#ifdef USE_NCCL
-  solver->add_callback(nccl);
-#endif
-}
-
-void share_weights(Solver<Dtype>* solver, Net<Dtype>* net) {
-  net->ShareTrainedLayersWith(solver->net().get());
-}
-
-template<typename Dtype>
 class NetCallback: public Net<Dtype>::Callback {
  public:
   explicit NetCallback(bp::object run) : run_(run) {}
@@ -330,52 +274,6 @@ void Net_after_backward(Net<Dtype>* net, bp::object run) {
   net->add_after_backward(new NetCallback<Dtype>(run));
 }
 
-void Net_add_nccl(Net<Dtype>* net
-#ifdef USE_NCCL
-  , NCCL<Dtype>* nccl
-#endif
-) {
-#ifdef USE_NCCL
-  net->add_after_backward(nccl);
-#endif
-}
-#ifndef USE_NCCL
-template<typename Dtype>
-class NCCL {
- public:
-  NCCL(shared_ptr<Solver<Dtype> > solver, const string& uid) {}
-};
-#endif
-
-bool HasNCCL() {
-#ifdef USE_NCCL
-  return true;
-#else
-  return false;
-#endif
-}
-
-#ifdef USE_NCCL
-bp::object NCCL_New_Uid() {
-  std::string uid = NCCL<Dtype>::new_uid();
-#if PY_MAJOR_VERSION >= 3
-  // Convert std::string to bytes so that Python does not
-  // try to decode the string using the current locale.
-
-  // Since boost 1.53 boost.python will convert str and bytes
-  // to std::string but will convert std::string to str. Here we
-  // force a bytes object to be returned. When this object
-  // is passed back to the NCCL constructor boost.python will
-  // correctly convert the bytes to std::string automatically
-  PyObject* py_uid = PyBytes_FromString(uid.c_str());
-  return bp::object(bp::handle<>(py_uid));
-#else
-  // automatic conversion is correct for python 2.
-  return bp::object(uid);
-#endif
-}
-#endif
-
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -389,7 +287,6 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("init_log", &InitLogLevel);
   bp::def("init_log", &InitLogLevelPipe);
   bp::def("log", &Log);
-  bp::def("has_nccl", &HasNCCL);
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
   bp::def("set_random_seed", &set_random_seed);
@@ -446,9 +343,14 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("before_forward", &Net_before_forward)
     .def("after_forward", &Net_after_forward)
     .def("before_backward", &Net_before_backward)
-    .def("after_backward", &Net_after_backward)
-    .def("after_backward", &Net_add_nccl);
-  BP_REGISTER_SHARED_PTR_TO_PYTHON(Net<Dtype>);
+    .def("after_backward", &Net_after_backward);
+  boost::python::type_info info = boost::python::type_id<shared_ptr<Net<Dtype> > >();
+  const boost::python::converter::registration* reg = boost::python::converter::registry::query(info); \
+  if (reg == NULL) { 
+    bp::register_ptr_to_python<shared_ptr<Net<Dtype> > >(); 
+  } else if ((*reg).m_to_python == NULL) { 
+    bp::register_ptr_to_python<shared_ptr<Net<Dtype> > >(); 
+  } 
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
     "Blob", bp::no_init)
@@ -476,7 +378,14 @@ BOOST_PYTHON_MODULE(_caffe) {
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()));
-  BP_REGISTER_SHARED_PTR_TO_PYTHON(Blob<Dtype>);
+  boost::python::type_info info2 = boost::python::type_id<shared_ptr<Blob<Dtype> > >();
+  const boost::python::converter::registration* reg2 = boost::python::converter::registry::query(info2); \
+  if (reg2 == NULL) { 
+    bp::register_ptr_to_python<shared_ptr<Blob<Dtype> > >(); 
+  } else if ((*reg2).m_to_python == NULL) { 
+    bp::register_ptr_to_python<shared_ptr<Blob<Dtype> > >(); 
+  } 
+  
 
   bp::class_<Layer<Dtype>, shared_ptr<PythonLayer<Dtype> >,
     boost::noncopyable>("Layer", bp::init<const LayerParameter&>())
@@ -485,7 +394,13 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("setup", &Layer<Dtype>::LayerSetUp)
     .def("reshape", &Layer<Dtype>::Reshape)
     .add_property("type", bp::make_function(&Layer<Dtype>::type));
-  BP_REGISTER_SHARED_PTR_TO_PYTHON(Layer<Dtype>);
+  boost::python::type_info info3 = boost::python::type_id<shared_ptr<Layer<Dtype> > >();
+  const boost::python::converter::registration* reg3 = boost::python::converter::registry::query(info3); \
+  if (reg3 == NULL) { 
+    bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >(); 
+  } else if ((*reg3).m_to_python == NULL) { 
+    bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >(); 
+  } 
 
   bp::class_<SolverParameter>("SolverParameter", bp::no_init)
     .add_property("max_iter", &SolverParameter::max_iter)
@@ -512,23 +427,23 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<vector<bool> >("BoolVec")
     .def(bp::vector_indexing_suite<vector<bool> >());
 
-  bp::class_<NCCL<Dtype>, shared_ptr<NCCL<Dtype> >,
-    boost::noncopyable>("NCCL",
-                        bp::init<shared_ptr<Solver<Dtype> >, const string&>())
-#ifdef USE_NCCL
-    .def("new_uid", NCCL_New_Uid).staticmethod("new_uid")
-    .def("bcast", &NCCL<Dtype>::Broadcast)
-#endif
     /* NOLINT_NEXT_LINE(whitespace/semicolon) */
   ;
-  BP_REGISTER_SHARED_PTR_TO_PYTHON(NCCL<Dtype>);
 
   bp::class_<Timer, shared_ptr<Timer>, boost::noncopyable>(
     "Timer", bp::init<>())
     .def("start", &Timer::Start)
     .def("stop", &Timer::Stop)
     .add_property("ms", &Timer::MilliSeconds);
-  BP_REGISTER_SHARED_PTR_TO_PYTHON(Timer);
+  //BP_REGISTER_SHARED_PTR_TO_PYTHON(Timer);
+  boost::python::type_info info4 = boost::python::type_id<shared_ptr<Timer > >();
+  const boost::python::converter::registration* reg4 = boost::python::converter::registry::query(info4); \
+  if (reg4 == NULL) { 
+    bp::register_ptr_to_python<shared_ptr<Timer > >(); 
+  } else if ((*reg4).m_to_python == NULL) { 
+    bp::register_ptr_to_python<shared_ptr<Timer > >(); 
+  } 
+  
 
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
