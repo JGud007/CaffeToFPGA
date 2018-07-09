@@ -430,21 +430,6 @@ BOOST_PYTHON_MODULE(_caffe) {
     /* NOLINT_NEXT_LINE(whitespace/semicolon) */
   ;
 
-  bp::class_<Timer, shared_ptr<Timer>, boost::noncopyable>(
-    "Timer", bp::init<>())
-    .def("start", &Timer::Start)
-    .def("stop", &Timer::Stop)
-    .add_property("ms", &Timer::MilliSeconds);
-  //BP_REGISTER_SHARED_PTR_TO_PYTHON(Timer);
-  boost::python::type_info info4 = boost::python::type_id<shared_ptr<Timer > >();
-  const boost::python::converter::registration* reg4 = boost::python::converter::registry::query(info4); \
-  if (reg4 == NULL) { 
-    bp::register_ptr_to_python<shared_ptr<Timer > >(); 
-  } else if ((*reg4).m_to_python == NULL) { 
-    bp::register_ptr_to_python<shared_ptr<Timer > >(); 
-  } 
-  
-
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
   import_array1();

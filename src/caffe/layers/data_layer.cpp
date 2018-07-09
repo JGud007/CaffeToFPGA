@@ -7,7 +7,6 @@
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/data_layer.hpp"
-#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -80,23 +79,16 @@ void DataLayer<Dtype>::Next() {
 // This function is called on prefetch thread
 template<typename Dtype>
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
-  CPUTimer batch_timer;
-  batch_timer.Start();
-  double read_time = 0;
-  double trans_time = 0;
-  CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
   const int batch_size = this->layer_param_.data_param().batch_size();
 
   Datum datum;
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    timer.Start();
     while (Skip()) {
       Next();
     }
     datum.ParseFromString(cursor_->value());
-    read_time += timer.MicroSeconds();
 
     if (item_id == 0) {
       // Reshape according to the first datum of each batch
@@ -110,7 +102,6 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
 
     // Apply data transformations (mirror, scale, crop...)
-    timer.Start();
     int offset = batch->data_.offset(item_id);
     Dtype* top_data = batch->data_.mutable_cpu_data();
     this->transformed_data_.set_cpu_data(top_data + offset);
@@ -120,14 +111,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       Dtype* top_label = batch->label_.mutable_cpu_data();
       top_label[item_id] = datum.label();
     }
-    trans_time += timer.MicroSeconds();
     Next();
   }
-  timer.Stop();
-  batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);
