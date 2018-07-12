@@ -1,7 +1,3 @@
-#ifdef USE_OPENCV
-#include <opencv2/core/core.hpp>
-#endif  // USE_OPENCV
-
 #include <string>
 #include <vector>
 
