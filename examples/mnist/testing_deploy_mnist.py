@@ -9,7 +9,7 @@ from datetime import datetime
 startTime = datetime.now()
 
 # Make sure that caffe is on the python path:
-CAFFE_ROOT = '/home/jarg/TestingRemoval2/' # CHANGE THIS LINE TO YOUR Caffe PATH
+CAFFE_ROOT = '/home/jarg/TestingRemoval1/' # CHANGE THIS LINE TO YOUR Caffe PATH
 sys.path.insert(0, CAFFE_ROOT + 'python')
 
 import caffe
