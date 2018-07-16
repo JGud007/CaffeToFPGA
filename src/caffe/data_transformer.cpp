@@ -21,8 +21,8 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       LOG(INFO) << "Loading mean file from: " << mean_file;
     }
     BlobProto blob_proto;
-    ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
-    data_mean_.FromProto(blob_proto);
+    //ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
+    //data_mean_.FromProto(blob_proto);
   }
   // check if we want to use mean_value
   if (param_.mean_value_size() > 0) {

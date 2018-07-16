@@ -97,3 +97,6 @@ MANIFEST-*
 
 #vunit output
 FPGA/vunit_out/*
+
+# Makefile.config
+Makefile.config

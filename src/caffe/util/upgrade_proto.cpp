@@ -14,23 +14,20 @@
 
 namespace caffe {
 
-void ReadNetParamsFromTextFileOrDie(const string& param_file,
-                                    NetParameter* param) {
-  CHECK(ReadProtoFromTextFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
+void ReadNetParamsFromTextFileOrDie(NetParameter* param) {
+  CHECK(ReadProtoFromTextFile(param))
+      << "Failed to parse NetParameter file";
 }
 
-void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
-                                      NetParameter* param) {
-  CHECK(ReadProtoFromBinaryFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
+void ReadNetParamsFromBinaryFileOrDie(NetParameter* param) {
+  CHECK(ReadProtoFromBinaryFile(param))
+      << "Failed to parse NetParameter file";
 }
 
 // Read parameters from a file into a SolverParameter proto message.
-void ReadSolverParamsFromTextFileOrDie(const string& param_file,
-                                       SolverParameter* param) {
-  CHECK(ReadProtoFromTextFile(param_file, param))
-      << "Failed to parse SolverParameter file: " << param_file;
+void ReadSolverParamsFromTextFileOrDie(SolverParameter* param) {
+  CHECK(ReadProtoFromTextFile(param))
+      << "Failed to parse SolverParameter file";
 }
 
 }  // namespace caffe

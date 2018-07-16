@@ -91,37 +91,8 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
   }
 }
 
-// Net constructor
-shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
-    const int level, const bp::object& stages,
-    const bp::object& weights) {
-  CheckFile(network_file);
-
-  // Convert stages from list to vector
-  vector<string> stages_vector;
-  if (!stages.is_none()) {
-    for (int i = 0; i < len(stages); i++) {
-      stages_vector.push_back(bp::extract<string>(stages[i]));
-    }
-  }
-
-  // Initialize net
-  shared_ptr<Net<Dtype> > net(new Net<Dtype>(network_file,
-        static_cast<Phase>(phase), level, &stages_vector));
-
-  // Load weights
-  if (!weights.is_none()) {
-    std::string weights_file_str = bp::extract<std::string>(weights);
-    CheckFile(weights_file_str);
-    net->CopyTrainedLayersFrom(weights_file_str);
-  }
-
-  return net;
-}
-
 // Legacy Net construct-and-load convenience constructor
-shared_ptr<Net<Dtype> > Net_Init_Load(
-    string param_file, string pretrained_param_file, int phase) {
+shared_ptr<Net<Dtype> > Net_Init_Load(int phase) {
   // LOG(WARNING) << "DEPRECATION WARNING - deprecated use of Python interface";
   // LOG(WARNING) << "Use this instead (with the named \"weights\""
     // << " parameter):";
@@ -130,16 +101,9 @@ shared_ptr<Net<Dtype> > Net_Init_Load(
   // CheckFile(param_file);
   // CheckFile(pretrained_param_file);
 
-  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
-      static_cast<Phase>(phase)));
-  net->CopyTrainedLayersFrom(pretrained_param_file);
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(static_cast<Phase>(phase)));
+  net->CopyTrainedLayersFrom();
   return net;
-}
-
-void Net_Save(const Net<Dtype>& net, string filename) {
-  NetParameter net_param;
-  net.ToProto(&net_param, false);
-  WriteProtoToBinaryFile(net_param, filename.c_str());
 }
 
 void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
@@ -293,11 +257,6 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
-    // Constructor
-    .def("__init__", bp::make_constructor(&Net_Init,
-          bp::default_call_policies(), (bp::arg("network_file"), "phase",
-            bp::arg("level")=0, bp::arg("stages")=bp::object(),
-            bp::arg("weights")=bp::object())))
     // Legacy constructor
     .def("__init__", bp::make_constructor(&Net_Init_Load))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
@@ -305,7 +264,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("reshape", &Net<Dtype>::Reshape)
     .def("clear_param_diffs", &Net<Dtype>::ClearParamDiffs)
     // The cast is to select a particular overload.
-    .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(
+    .def("copy_from", static_cast<void (Net<Dtype>::*)()>(
         &Net<Dtype>::CopyTrainedLayersFrom))
     .def("share_with", &Net<Dtype>::ShareTrainedLayersWith)
     .add_property("_blob_loss_weights", bp::make_function(
@@ -329,7 +288,6 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
-    .def("save", &Net_Save)
     .def("before_forward", &Net_before_forward)
     .def("after_forward", &Net_after_forward)
     .def("before_backward", &Net_before_backward)

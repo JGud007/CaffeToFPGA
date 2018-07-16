@@ -43,7 +43,7 @@ imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/img_35_is6.
 imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/img_45_is8.jpg')
 imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/test_3.png')
 
-net = caffe.Net(MODEL_FILE, PRETRAINED, caffe.TEST)
+net = caffe.Net(caffe.TEST)
 transformer = caffe.io.Transformer({'data': (1, 1, 28, 28)})
 transformer.set_transpose('data', (2, 0, 1))    
 transformer.set_raw_scale('data', 1/255.)

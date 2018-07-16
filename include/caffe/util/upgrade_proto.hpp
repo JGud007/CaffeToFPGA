@@ -8,14 +8,11 @@
 namespace caffe {
 
 // Read parameters from a file into a NetParameter proto message.
-void ReadNetParamsFromTextFileOrDie(const string& param_file,
-                                    NetParameter* param);
-void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
-                                      NetParameter* param);
+void ReadNetParamsFromTextFileOrDie(NetParameter* param);
+void ReadNetParamsFromBinaryFileOrDie(NetParameter* param);
 
 // Read parameters from a file into a SolverParameter proto message.
-void ReadSolverParamsFromTextFileOrDie(const string& param_file,
-                                       SolverParameter* param);
+void ReadSolverParamsFromTextFileOrDie(SolverParameter* param);
 
 }  // namespace caffe
 

@@ -21,10 +21,10 @@ Net<Dtype>::Net(const NetParameter& param) {
 }
 
 template <typename Dtype>
-Net<Dtype>::Net(const string& param_file, Phase phase,
+Net<Dtype>::Net(Phase phase,
     const int level, const vector<string>* stages) {
   NetParameter param;
-  ReadNetParamsFromTextFileOrDie(param_file, &param);
+  ReadNetParamsFromTextFileOrDie(&param);
   // Set phase, stages and level
   param.mutable_state()->set_phase(phase);
   if (stages != NULL) {
@@ -764,15 +764,14 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
-    CopyTrainedLayersFromBinaryProto(trained_filename);
+void Net<Dtype>::CopyTrainedLayersFrom() {
+    CopyTrainedLayersFromBinaryProto();
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFromBinaryProto(
-    const string trained_filename) {
+void Net<Dtype>::CopyTrainedLayersFromBinaryProto() {
   NetParameter param;
-  ReadNetParamsFromBinaryFileOrDie(trained_filename, &param);
+  ReadNetParamsFromBinaryFileOrDie(&param);
   CopyTrainedLayersFrom(param);
 }
 
