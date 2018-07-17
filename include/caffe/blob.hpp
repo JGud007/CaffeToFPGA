@@ -274,7 +274,7 @@ class Blob {
   int count_;
   int capacity_;
 
-  DISABLE_COPY_AND_ASSIGN(Blob);
+  //DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
 
 }  // namespace caffe

@@ -56,19 +56,6 @@ void Log(const string& s) {
 
 void set_random_seed(unsigned int seed) { Caffe::set_random_seed(seed); }
 
-// For convenience, check that input files can be opened, and raise an
-// exception that boost will send to Python if not (caffe could still crash
-// later if the input files are disturbed before they are actually used, but
-// this saves frustration in most cases).
-static void CheckFile(const string& filename) {
-    std::ifstream f(filename.c_str());
-    if (!f.good()) {
-      f.close();
-      throw std::runtime_error("Could not open file " + filename);
-    }
-    f.close();
-}
-
 void CheckContiguousArray(PyArrayObject* arr, string name,
     int channels, int height, int width) {
   if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
@@ -93,14 +80,6 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
 
 // Legacy Net construct-and-load convenience constructor
 shared_ptr<Net<Dtype> > Net_Init_Load(int phase) {
-  // LOG(WARNING) << "DEPRECATION WARNING - deprecated use of Python interface";
-  // LOG(WARNING) << "Use this instead (with the named \"weights\""
-    // << " parameter):";
-  // LOG(WARNING) << "Net('" << param_file << "', " << phase
-    // << ", weights='" << pretrained_param_file << "')";
-  // CheckFile(param_file);
-  // CheckFile(pretrained_param_file);
-
   shared_ptr<Net<Dtype> > net(new Net<Dtype>(static_cast<Phase>(phase)));
   net->CopyTrainedLayersFrom();
   return net;
@@ -230,6 +209,31 @@ void Net_after_backward(Net<Dtype>* net, bp::object run) {
   net->add_after_backward(new NetCallback<Dtype>(run));
 }
 
+void mnistMain(Dtype inputData){
+	int phase = 1;
+	shared_ptr<Net<Dtype> > net(new Net<Dtype>(static_cast<Phase>(phase)));
+	net->CopyTrainedLayersFrom();
+	
+	net->blob_by_name("data")->Reshape(1, 1, 28, 28);
+	Dtype* dataBlob = net->blob_by_name("data")->mutable_cpu_data();
+	dataBlob = &inputData;
+	
+	net->Forward();
+	
+	vector<float> scores(10);
+	scores[0] = net->blob_by_name("ip2")->data_at(0,0,0,0);
+	scores[1] = net->blob_by_name("ip2")->data_at(0,1,0,0);
+	scores[2] = net->blob_by_name("ip2")->data_at(0,2,0,0);
+	scores[3] = net->blob_by_name("ip2")->data_at(0,3,0,0);
+	scores[4] = net->blob_by_name("ip2")->data_at(0,4,0,0);
+	scores[5] = net->blob_by_name("ip2")->data_at(0,5,0,0);
+	scores[6] = net->blob_by_name("ip2")->data_at(0,6,0,0);
+	scores[7] = net->blob_by_name("ip2")->data_at(0,7,0,0);
+	scores[8] = net->blob_by_name("ip2")->data_at(0,8,0,0);
+	scores[9] = net->blob_by_name("ip2")->data_at(0,9,0,0);
+	
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -246,6 +250,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
   bp::def("set_random_seed", &set_random_seed);
+  bp::def("mnistMain", &mnistMain);
   bp::def("set_device", &Caffe::SetDevice);
   bp::def("solver_count", &Caffe::solver_count);
   bp::def("set_solver_count", &Caffe::set_solver_count);
