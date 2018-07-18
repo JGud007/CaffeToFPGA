@@ -43,18 +43,15 @@ imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/img_35_is6.
 imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/img_45_is8.jpg')
 imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/test_3.png')
 
-#net = caffe.Net(caffe.TEST)
 transformer = caffe.io.Transformer({'data': (1, 1, 28, 28)})
 transformer.set_transpose('data', (2, 0, 1))    
 transformer.set_raw_scale('data', 1/255.)
 
-
 testsRun = 0
 testsPassed = 0
 
-
+print 'STARTING COMPUTATION'
 for arrayImage in imageArray:
-	print 'testing the following image: ',arrayImage
 	assert os.path.exists(arrayImage), "image %s not found" % arrayImage
 	image = cv2.imread(arrayImage)
 	image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -72,6 +69,7 @@ for arrayImage in imageArray:
 
 print 'Tests passed = ',testsPassed,'/',testsRun	
 print 'Script took', datetime.now()-startTime, 'seconds.'
+print 'FINISHED!'
 
 
 ## This code has been copied and modified from the following link:

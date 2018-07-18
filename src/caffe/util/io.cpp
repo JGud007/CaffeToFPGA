@@ -50,14 +50,7 @@ bool ReadProtoFromTextFile(Message* proto) {
     SS >> std::hex >> u.value;
     final.append((const char*)&u.component, 1);
   }
-
-
-  std::cout << "=================== Starting model Parsing\n";
-    bool success = proto->ParseFromString(final);
-  std::cout << "=================== Ending model Parsing\n";
-
-
-  return success;
+  return proto->ParseFromString(final);
 }
 
 const Message* DuplicateMessage(const Message *msg) {
@@ -78,13 +71,7 @@ bool ReadProtoFromBinaryFile(Message* proto) {
     SS >> std::hex >> u.value;
     final.append((const char*)&u.component, 1);
   }
-
-
-  std::cout << "=================== Starting model Parsing\n";
-    bool success = proto->ParseFromString(final);
-  std::cout << "=================== Ending model Parsing\n";
-
-  return success;
+  return proto->ParseFromString(final);
 }
 
 string getTrainingString(void) {
