@@ -33,7 +33,7 @@ def blobproto_to_array(blob, return_diff=False):
     else:
         return data.reshape(blob.shape.dim)
 
-def array_to_blobproto(arr, diff=None):
+def array_to_blobproto_str(arr, diff=None):
     """Converts a N-dimensional array to blob proto. If diff is given, also
     convert the diff. You need to make sure that arr and diff have the same
     shape, and this function does not do sanity check.
@@ -43,7 +43,7 @@ def array_to_blobproto(arr, diff=None):
     blob.data.extend(arr.astype(float).flat)
     if diff is not None:
         blob.diff.extend(diff.astype(float).flat)
-    return blob
+    return blob.SerializeToString()
 
 
 def arraylist_to_blobprotovector_str(arraylist):

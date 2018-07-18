@@ -43,7 +43,7 @@ imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/img_1_is2.j
 # imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/img_45_is8.jpg')
 # imageArray.append(CAFFE_ROOT + 'examples/mnist/mnistasjpg/testSample/test_3.png')
 
-net = caffe.Net(caffe.TEST)
+#net = caffe.Net(caffe.TEST)
 transformer = caffe.io.Transformer({'data': (1, 1, 28, 28)})
 transformer.set_transpose('data', (2, 0, 1))    
 transformer.set_raw_scale('data', 1/255.)
@@ -54,29 +54,23 @@ testsPassed = 0
 
 
 for arrayImage in imageArray:
+	print 'testing the following image: ',arrayImage
 	assert os.path.exists(arrayImage), "image %s not found" % arrayImage
 	image = cv2.imread(arrayImage)
 	image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	image.resize((28, 28, 1))
 	
 	preprocessedImage = transformer.preprocess('data', image)
-	blob = caffe.io.array_to_blobproto(preprocessedImage)
-	caffe.mnistMain(blob)
+	#blob = caffe.io.array_to_blobproto(preprocessedImage)
+	#print(type(blob))
+	data = caffe.io.array_to_blobproto_str(preprocessedImage)
+	caffe.mnistMain(data)
 
-	net.blobs['data'].reshape(1, 1, 28, 28)
-	net.blobs['data'].data[...] = transformer.preprocess('data', image)    
+	#net.blobs['data'].reshape(1, 1, 28, 28)
+	#net.blobs['data'].data[...] = transformer.preprocess('data', image)    
 
-	net.forward()
-	scores = net.blobs['ip2'].data
-
-	testsRun += 1
-	if (scores.argmax() == int(arrayImage[-5])):
-		testsPassed += 1
-	else:
-		print 'test failed with the following image: ',arrayImage
-
-print 'Tests passed = ',testsPassed,'/',testsRun	
-print 'Script took', datetime.now()-startTime, 'seconds.'
+	#net.forward()
+	#scores = net.blobs['ip2'].data
 
 ## This code has been copied and modified from the following link:
 ## https://github.com/9crk/caffe-mnist-test/blob/master/mnist_test.py

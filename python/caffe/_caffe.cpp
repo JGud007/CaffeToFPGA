@@ -209,29 +209,29 @@ void Net_after_backward(Net<Dtype>* net, bp::object run) {
   net->add_after_backward(new NetCallback<Dtype>(run));
 }
 
-void mnistMain(Dtype inputData){
+void mnistMain(string inputData){
 	int phase = 1;
 	shared_ptr<Net<Dtype> > net(new Net<Dtype>(static_cast<Phase>(phase)));
 	net->CopyTrainedLayersFrom();
 	
+	BlobProto *blobProto = new BlobProto();
+	blobProto->ParseFromString(inputData);
+	//net->blob_by_name("data")->Reshape(1, 1, 28, 28);
+	net->blob_by_name("data")->FromProto(*blobProto, true);//->mutable_cpu_data();
 	net->blob_by_name("data")->Reshape(1, 1, 28, 28);
-	Dtype* dataBlob = net->blob_by_name("data")->mutable_cpu_data();
-	dataBlob = &inputData;
+	//dataBlob = &inputData;
 	
 	net->Forward();
 	
-	vector<float> scores(10);
-	scores[0] = net->blob_by_name("ip2")->data_at(0,0,0,0);
-	scores[1] = net->blob_by_name("ip2")->data_at(0,1,0,0);
-	scores[2] = net->blob_by_name("ip2")->data_at(0,2,0,0);
-	scores[3] = net->blob_by_name("ip2")->data_at(0,3,0,0);
-	scores[4] = net->blob_by_name("ip2")->data_at(0,4,0,0);
-	scores[5] = net->blob_by_name("ip2")->data_at(0,5,0,0);
-	scores[6] = net->blob_by_name("ip2")->data_at(0,6,0,0);
-	scores[7] = net->blob_by_name("ip2")->data_at(0,7,0,0);
-	scores[8] = net->blob_by_name("ip2")->data_at(0,8,0,0);
-	scores[9] = net->blob_by_name("ip2")->data_at(0,9,0,0);
+	int maxIndex = 0;
+	float maxProb = 0.0;
+	for (int i=0; i<10; ++i){
+		if(net->blob_by_name("ip2")->data_at(0,i,0,0) > maxProb){
+			maxIndex = i;
+		}
+	}	
 	
+	LOG(WARNING) << "The result is " << maxIndex;
 }
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
