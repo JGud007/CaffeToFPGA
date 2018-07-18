@@ -209,7 +209,7 @@ void Net_after_backward(Net<Dtype>* net, bp::object run) {
   net->add_after_backward(new NetCallback<Dtype>(run));
 }
 
-void mnistMain(string inputData){
+int mnistMain(string inputData){
 	int phase = 1;
 	shared_ptr<Net<Dtype> > net(new Net<Dtype>(static_cast<Phase>(phase)));
 	net->CopyTrainedLayersFrom();
@@ -225,13 +225,15 @@ void mnistMain(string inputData){
 	
 	int maxIndex = 0;
 	float maxProb = 0.0;
-	for (int i=0; i<10; ++i){
+	for (int i=0; i<10; i++){
 		if(net->blob_by_name("ip2")->data_at(0,i,0,0) > maxProb){
 			maxIndex = i;
+			maxProb = net->blob_by_name("ip2")->data_at(0,i,0,0);
+			//LOG(WARNING) << "The prob at index: " << maxIndex << " is " << net->blob_by_name("ip2")->data_at(0,i,0,0);
 		}
 	}	
 	
-	LOG(WARNING) << "The result is " << maxIndex;
+	return maxIndex;
 }
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
