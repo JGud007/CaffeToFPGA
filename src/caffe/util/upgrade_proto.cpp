@@ -1,13 +1,4 @@
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/text_format.h>
-
-#include <boost/filesystem.hpp>
-
-#include <map>
-#include <string>
-
-#include "caffe/common.hpp"
+//#include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"

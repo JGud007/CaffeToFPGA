@@ -1,7 +1,5 @@
 #include <fcntl.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/text_format.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -13,7 +11,6 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
-#include <google/protobuf/descriptor.h>
 
 const int kProtoReadBytesLimit = INT_MAX;  // Max size of 2 GB minus 1 byte.
 
@@ -29,15 +26,6 @@ union U
 
 string getTrainingString(void);
 string getModelString(void);
-    
-using google::protobuf::io::FileInputStream;
-using google::protobuf::io::FileOutputStream;
-using google::protobuf::io::ZeroCopyInputStream;
-using google::protobuf::io::CodedInputStream;
-using google::protobuf::io::ZeroCopyOutputStream;
-using google::protobuf::io::CodedOutputStream;
-using google::protobuf::Message;
-using google::protobuf::Reflection;
 
 bool ReadProtoFromTextFile(Message* proto) {
   int j;

@@ -476,7 +476,7 @@ test: $(TEST_ALL_BIN) $(TEST_ALL_DYNLINK_BIN) $(TEST_BINS)
 
 examples: $(EXAMPLE_BINS)
 
-py$(PROJECT): py
+py$(PROJECT): py 
 
 py: $(PY$(PROJECT)_SO) $(PROTO_GEN_PY)
 
