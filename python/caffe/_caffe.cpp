@@ -1,4 +1,4 @@
-#include <Python.h>  // NOLINT(build/include_alpha)
+//#include <Python.h>  // NOLINT(build/include_alpha)
 
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -229,7 +229,6 @@ int mnistMain(string inputData){
 		if(net->blob_by_name("ip2")->data_at(0,i,0,0) > maxProb){
 			maxIndex = i;
 			maxProb = net->blob_by_name("ip2")->data_at(0,i,0,0);
-			//LOG(WARNING) << "The prob at index: " << maxIndex << " is " << net->blob_by_name("ip2")->data_at(0,i,0,0);
 		}
 	}	
 	
